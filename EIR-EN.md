@@ -405,7 +405,7 @@ Project information standards aim to describe the criteria that will provide sup
 
 ### 3.1.2. Nomenclature of information containers - Files
 
-Information containers must be named using seven fields, separated by a delimiter, according to the following convention:
+Information containers must be named using eight fields, separated by a delimiter, according to the following convention:
 
 [`<Project>`](#a-project)-[`<Originator>`](#b-originator)-[`<Volume/System>`](#c-volumesystem)-[`<Level/Location>`](#d-levellocation)-[`<Type>`](#e-type)-[`<Discipline>`](#f-discipline)-[`<Phase>`](#g-phase)-[`<Number>`](#h-number)
 
