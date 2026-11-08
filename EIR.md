@@ -1,5 +1,3 @@
-# V1.1.3 - 2025/11/19
-
 # Índice
 - [Glossário](#Glossário)
 - [1. Introdução](#1-introdução)
