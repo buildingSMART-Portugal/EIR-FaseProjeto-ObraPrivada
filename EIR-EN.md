@@ -1,5 +1,3 @@
-# V1.1.3 - 2025/11/19
-
 # Content
 - [Glossary](#glossary)
 - [1. Introduction](#1-introduction)
@@ -732,7 +730,7 @@ The items to be considered in the review, as well as the KPIs and checklist, are
 
 The final deliverables will be realised using the CDE solution determined previously.
 
-The final deliverables must move to status S5 ([table B.1](#table-b1--codes-for-the-status-of-the-information-blocks-within-the-cde)) when they are finalised within the dates determined in section 5.
+The final deliverables must move to status S5 ([table B.1](#table-b1--status-codes-for-the-information-containers-within-the-cde)) when they are finalised within the dates determined in section 5.
 
 ---
 

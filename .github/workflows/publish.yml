@@ -1,0 +1,105 @@
+name: Publish website and PDFs
+
+# Builds the website (PT/EN), the version history page and both PDFs from EIR.md / EIR-EN.md.
+#
+# - Every push to main      → site shows the latest text; if it differs from the last release
+#                              it is labelled automatically, e.g. "1.1.3+2 (working draft)".
+# - Publishing a GitHub Release with a tag like v1.2.0
+#                            → site is rebuilt as "1.2.0" and the PDFs of that tag are attached
+#                              to the release (and archived by Zenodo, if the integration is on).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: publish-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history and tags: the version and the version history come from Git.
+          fetch-depth: 0
+          # On a release, publish what is on main (it is labelled with the new version).
+          ref: ${{ github.event_name == 'release' && github.event.repository.default_branch || '' }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+      - run: npx playwright install --with-deps --only-shell chromium
+      - run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # to read release notes for the history page
+      - run: npm run pdf
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eir-pdf
+          path: _site/pdf/*.pdf
+
+  release-pdfs:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # checks out the release tag itself
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+      - run: npx playwright install --with-deps --only-shell chromium
+      - run: npm run build && npm run pdf
+
+      - name: Attach PDFs to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          cp ../_site/pdf/EIR-PT.pdf "../_site/pdf/EIR-PT-$TAG.pdf"
+          cp ../_site/pdf/EIR-EN.pdf "../_site/pdf/EIR-EN-$TAG.pdf"
+          gh release upload "$TAG" "../_site/pdf/EIR-PT-$TAG.pdf" "../_site/pdf/EIR-EN-$TAG.pdf" --clobber --repo "$GITHUB_REPOSITORY"
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
